@@ -13,13 +13,7 @@ export default function Home() {
       </div>
 
       <main className="flex-grow flex items-center justify-center">
-        <FancyBox
-          srp={""}
-          gameRtp={""}
-          difference={""}
-          lastUpdate={""}
-          spins={0}
-        />
+        <FancyBox srp={""} gameRtp={""} difference={""} />
       </main>
     </div>
   );
