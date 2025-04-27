@@ -2,28 +2,40 @@
 
 import React from "react";
 import Image from "next/image";
+import clsx from "clsx";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
 type FancyBoxProps = {
   isMobile: boolean;
-  srp: string;
-  gameRtp: string;
-  difference: string;
+  srp: number;
+  rtp: number;
+  gameRtp: number;
 };
 
-const FancyBox: React.FC<FancyBoxProps> = ({
-  isMobile,
-  srp,
-  gameRtp,
-  difference,
-}) => {
-  const pathRef = useRef<SVGPathElement>(null);
+const FancyBox: React.FC<FancyBoxProps> = ({ isMobile, srp, rtp, gameRtp }) => {
+  const [gameTemperature, setGameTemperature] = useState("");
+  const [rtpState, setRtpState] = useState(() => (gameRtp - srp).toFixed(2));
   const [flakePos, setFlakePos] = useState({ x: 0, y: 0 });
+  const pathRef = useRef<SVGPathElement>(null);
   const progress = useMotionValue(0);
   const progressValue = 80;
 
   useEffect(() => {
+    const calculateRtpState = () => (gameRtp - srp).toFixed(2);
+    const newRtpState = calculateRtpState();
+    setRtpState(newRtpState);
+
+    if (parseFloat(newRtpState) > 0) {
+      setGameTemperature("Hot");
+    } else {
+      setGameTemperature("Cold");
+    }
+  }, [srp, gameRtp]);
+
+  useEffect(() => {
+    if (!gameTemperature) return; // Wait until gameTemperature is set
+
     const path = pathRef.current;
     if (!path) return;
     progress.set(0);
@@ -43,7 +55,7 @@ const FancyBox: React.FC<FancyBoxProps> = ({
       controls.stop();
       unsubscribe();
     };
-  }, [progress, isMobile]);
+  }, [progress, isMobile, gameTemperature]);
 
   const dashOffset = useTransform(progress, (p) => {
     const totalLength = pathRef.current?.getTotalLength() ?? 0;
@@ -91,12 +103,25 @@ const FancyBox: React.FC<FancyBoxProps> = ({
               viewBox={isMobile ? "0 0 185 185" : "0 0 350 350"}
               className="relative w-[185px] md:w-[350px] h-[185px] md:h-[350px]">
               <defs>
-                <linearGradient id="gradient" gradientTransform="rotate(40)">
-                  <stop offset="0%" stopColor="#5FFACB" />
-                  <stop offset="20%" stopColor="#36FCF0" />
-                  <stop offset="80%" stopColor="#0100FF" />
-                  <stop offset="100%" stopColor="#0100C8" />
-                </linearGradient>
+                {gameTemperature && (
+                  <linearGradient id="gradient" gradientTransform="rotate(40)">
+                    {gameTemperature === "Cold" ? (
+                      <>
+                        <stop offset="0%" stopColor="#5FFACB" />
+                        <stop offset="20%" stopColor="#36FCF0" />
+                        <stop offset="80%" stopColor="#0100FF" />
+                        <stop offset="100%" stopColor="#0100C8" />
+                      </>
+                    ) : (
+                      <>
+                        <stop offset="0%" stopColor="#E90000" />
+                        <stop offset="20%" stopColor="#FF952B" />
+                        <stop offset="80%" stopColor="#FF952B" />
+                        <stop offset="100%" stopColor="#E90000" />
+                      </>
+                    )}
+                  </linearGradient>
+                )}
               </defs>
               <path
                 d={
@@ -145,16 +170,25 @@ const FancyBox: React.FC<FancyBoxProps> = ({
               )}
             </svg>
 
-            <motion.img
-              src="/images/snowflake.svg"
-              alt="Snowflake"
-              className="absolute md:w-[35px] md:h-[40px] w-[28px] h-[33px]"
-              style={{
-                left: `${flakePos.x}px`,
-                top: `${flakePos.y}px`,
-                transform: "translate(-50%, -50%)",
-              }}
-            />
+            {gameTemperature && (
+              <motion.img
+                src={
+                  gameTemperature === "Cold"
+                    ? "/images/snowflake.svg"
+                    : "/images/flame.png"
+                }
+                alt={gameTemperature === "Cold" ? "Snowflake" : "Flame"}
+                className={clsx("absolute", {
+                  "md:w-[57px] w-[40px] h-auto": gameTemperature === "Hot",
+                  "md:w-[43px] w-[28px] h-auto": gameTemperature === "Cold",
+                })}
+                style={{
+                  left: `${flakePos.x}px`,
+                  top: `${flakePos.y}px`,
+                  transform: "translate(-50%, -50%)",
+                }}
+              />
+            )}
 
             <div className="absolute top-1/2 start-1/2 transform -translate-x-1/2 -translate-y-1/2">
               <Image
@@ -168,17 +202,27 @@ const FancyBox: React.FC<FancyBoxProps> = ({
           </div>
 
           <div className="text-[20px] md:text-[40px] font-[Montserrat] font-black md:mb-[-8]">
-            88.2%
+            {srp.toFixed(1)}%
           </div>
-          <div className="text-xs md:text-base font-semibold text-[#36FCF0] vertical-align-middle">
+          <div className="text-xs md:text-base font-semibold vertical-align-middle">
             <Image
-              src="/images/ice-emoji.png"
-              alt="Ice emoji"
+              src={
+                gameTemperature === "Cold"
+                  ? "/images/ice-emoji.png"
+                  : "/images/hot-emoji.png"
+              }
+              alt={gameTemperature === "Cold" ? "Ice emoji" : "Hot emoji"}
               className="inline-block mr-1 mt-[-2]"
               width={16}
               height={16}
             />
-            <span>RTP -6.80%</span>
+            <span
+              className={clsx("", {
+                "text-[#36FCF0]": gameTemperature === "Cold",
+                "text-[#EF240B]": gameTemperature === "Hot",
+              })}>
+              RTP {parseFloat(rtpState) > 0 ? `+${rtpState}` : rtpState}%
+            </span>
           </div>
         </div>
 
@@ -208,27 +252,17 @@ const FancyBox: React.FC<FancyBoxProps> = ({
                     />
                   </svg>
                 </span>
-                <span>{srp}88.2%</span>
+                <span>{srp.toFixed(1)}%</span>
               </div>
               <div className="flex justify-between font-semibold">
                 <span>Game RTP</span>
-                <span>{gameRtp}95.0%</span>
+                <span>{gameRtp.toFixed(1)}%</span>
               </div>
               <div className="flex justify-between font-semibold">
                 <span>Difference</span>
-                <div>
-                  {Array.from({ length: 4 }).map((_, index) => (
-                    <Image
-                      key={index}
-                      src="/images/ice-cube-emoji.png"
-                      alt="Ice cube emoji"
-                      className="inline-block mr-px mt-[-2]"
-                      width={16}
-                      height={16}
-                    />
-                  ))}
-                  <span>{difference} -6.80%</span>
-                </div>
+                <span>
+                  {parseFloat(rtpState) > 0 ? `+${rtpState}` : rtpState}%
+                </span>
               </div>
               <div className="w-[100%] h-[2px] bg-white opacity-10 mt-2 mb-3"></div>
               <div className="text-xs text-center text-[#36FCF0]">

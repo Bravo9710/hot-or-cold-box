@@ -31,7 +31,7 @@ export default function Home() {
       </div>
 
       <main className="flex-grow flex items-center justify-center">
-        <FancyBox isMobile={isMobile} srp={""} gameRtp={""} difference={""} />
+        <FancyBox isMobile={isMobile} srp={88.2} rtp={1} gameRtp={95} />
       </main>
     </div>
   );
