@@ -1,6 +1,24 @@
-import FancyBox from "./components/fancyBox"; // Ensure the file exists at this path or update the path to the correct location
+"use client";
+
+import FancyBox from "./components/fancyBox";
+import { useState, useEffect } from "react";
 
 export default function Home() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <header className="bg-blue-900 text-white py-8 text-center">
@@ -13,7 +31,7 @@ export default function Home() {
       </div>
 
       <main className="flex-grow flex items-center justify-center">
-        <FancyBox srp={""} gameRtp={""} difference={""} />
+        <FancyBox isMobile={isMobile} srp={""} gameRtp={""} difference={""} />
       </main>
     </div>
   );
