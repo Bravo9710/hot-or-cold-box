@@ -31,7 +31,15 @@ export default function Home() {
       </div>
 
       <main className="flex-grow flex items-center justify-center">
-        <FancyBox isMobile={isMobile} srp={88.2} rtp={1} gameRtp={95} />
+        <FancyBox
+          isMobile={isMobile}
+          srp={96.5}
+          rtp={99.5}
+          gameRtp={89}
+          operatorLogo="/images/casino-logo.png"
+          providerLogo="/images/user-logo.png"
+          gameThumbnail="/images/slot-logo.png"
+        />
       </main>
     </div>
   );

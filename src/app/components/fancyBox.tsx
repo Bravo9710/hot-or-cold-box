@@ -7,26 +7,45 @@ import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
 type FancyBoxProps = {
+  operatorLogo: string;
+  providerLogo: string;
+  gameThumbnail: string;
   isMobile: boolean;
   srp: number;
   rtp: number;
   gameRtp: number;
 };
 
-const FancyBox: React.FC<FancyBoxProps> = ({ isMobile, srp, rtp, gameRtp }) => {
+const FancyBox: React.FC<FancyBoxProps> = ({
+  operatorLogo,
+  providerLogo,
+  gameThumbnail,
+  isMobile,
+  srp,
+  rtp,
+  gameRtp,
+}) => {
   const [gameTemperature, setGameTemperature] = useState("");
-  const [rtpState, setRtpState] = useState(() => (gameRtp - srp).toFixed(2));
   const [flakePos, setFlakePos] = useState({ x: 0, y: 0 });
+  const [difference, setDifference] = useState(() =>
+    (gameRtp - srp).toFixed(2),
+  );
   const pathRef = useRef<SVGPathElement>(null);
   const progress = useMotionValue(0);
-  const progressValue = 80;
+  const progressValue = React.useMemo(() => {
+    const absDifference = rtp > srp ? rtp - srp : srp - rtp;
+    if (absDifference >= 10) {
+      return 100;
+    }
+    return (absDifference / 10) * 100;
+  }, [rtp, srp]);
 
   useEffect(() => {
     const calculateRtpState = () => (gameRtp - srp).toFixed(2);
-    const newRtpState = calculateRtpState();
-    setRtpState(newRtpState);
+    const newDifference = calculateRtpState();
+    setDifference(newDifference);
 
-    if (parseFloat(newRtpState) > 0) {
+    if (parseFloat(newDifference) > 0) {
       setGameTemperature("Hot");
     } else {
       setGameTemperature("Cold");
@@ -55,7 +74,7 @@ const FancyBox: React.FC<FancyBoxProps> = ({ isMobile, srp, rtp, gameRtp }) => {
       controls.stop();
       unsubscribe();
     };
-  }, [progress, isMobile, gameTemperature]);
+  }, [progress, isMobile, gameTemperature, progressValue]);
 
   const dashOffset = useTransform(progress, (p) => {
     const totalLength = pathRef.current?.getTotalLength() ?? 0;
@@ -68,7 +87,7 @@ const FancyBox: React.FC<FancyBoxProps> = ({ isMobile, srp, rtp, gameRtp }) => {
         <div className="box-head flex justify-between items-center p-4 pb-2">
           <div className="flex justify-center items-center">
             <Image
-              src="/images/casino-logo.png"
+              src={operatorLogo}
               alt="Casino logo"
               className="rounded-full height-auto"
               width={36}
@@ -86,7 +105,7 @@ const FancyBox: React.FC<FancyBoxProps> = ({ isMobile, srp, rtp, gameRtp }) => {
               <span className="block text-sm">Netent</span>
             </div>
             <Image
-              src="/images/user-logo.png"
+              src={providerLogo}
               alt="Creator logo"
               className="rounded-full"
               width={36}
@@ -192,7 +211,7 @@ const FancyBox: React.FC<FancyBoxProps> = ({ isMobile, srp, rtp, gameRtp }) => {
 
             <div className="absolute top-1/2 start-1/2 transform -translate-x-1/2 -translate-y-1/2">
               <Image
-                src="/images/slot-logo.png"
+                src={gameThumbnail}
                 alt="Creator logo"
                 className="rounded-full"
                 width={isMobile ? 92 : 128}
@@ -221,7 +240,7 @@ const FancyBox: React.FC<FancyBoxProps> = ({ isMobile, srp, rtp, gameRtp }) => {
                 "text-[#36FCF0]": gameTemperature === "Cold",
                 "text-[#EF240B]": gameTemperature === "Hot",
               })}>
-              RTP {parseFloat(rtpState) > 0 ? `+${rtpState}` : rtpState}%
+              RTP {parseFloat(difference) > 0 ? `+${difference}` : difference}%
             </span>
           </div>
         </div>
@@ -261,7 +280,7 @@ const FancyBox: React.FC<FancyBoxProps> = ({ isMobile, srp, rtp, gameRtp }) => {
               <div className="flex justify-between font-semibold">
                 <span>Difference</span>
                 <span>
-                  {parseFloat(rtpState) > 0 ? `+${rtpState}` : rtpState}%
+                  {parseFloat(difference) > 0 ? `+${difference}` : difference}%
                 </span>
               </div>
               <div className="w-[100%] h-[2px] bg-white opacity-10 mt-2 mb-3"></div>
