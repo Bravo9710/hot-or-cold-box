@@ -21,13 +21,15 @@ const FancyBox: React.FC<FancyBoxProps> = ({
   const pathRef = useRef<SVGPathElement>(null);
   const [flakePos, setFlakePos] = useState({ x: 0, y: 0 });
   const progress = useMotionValue(0);
+  const progressValue = 80;
 
   useEffect(() => {
     const path = pathRef.current;
     if (!path) return;
+    progress.set(0);
 
     const totalLength = path.getTotalLength();
-    const controls = animate(progress, 50, {
+    const controls = animate(progress, progressValue, {
       duration: 2,
       ease: "easeInOut",
     });
@@ -41,19 +43,7 @@ const FancyBox: React.FC<FancyBoxProps> = ({
       controls.stop();
       unsubscribe();
     };
-  }, [progress]);
-
-  useEffect(() => {
-    progress.set(0); // Reset progress
-    const controls = animate(progress, 50, {
-      duration: 2,
-      ease: "easeInOut",
-    });
-
-    return () => {
-      controls.stop();
-    };
-  }, [isMobile]);
+  }, [progress, isMobile]);
 
   const dashOffset = useTransform(progress, (p) => {
     const totalLength = pathRef.current?.getTotalLength() ?? 0;
