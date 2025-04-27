@@ -43,6 +43,18 @@ const FancyBox: React.FC<FancyBoxProps> = ({
     };
   }, [progress]);
 
+  useEffect(() => {
+    progress.set(0); // Reset progress
+    const controls = animate(progress, 50, {
+      duration: 2,
+      ease: "easeInOut",
+    });
+
+    return () => {
+      controls.stop();
+    };
+  }, [isMobile]);
+
   const dashOffset = useTransform(progress, (p) => {
     const totalLength = pathRef.current?.getTotalLength() ?? 0;
     return totalLength * (1 - p / 100);
